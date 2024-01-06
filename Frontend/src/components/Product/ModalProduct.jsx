@@ -62,7 +62,8 @@ const ModalProduct = (props) => {
         setValidInput({ ...validInput })
       });
       } else {
-        res = await dispatch(updateProduct({id: id,  data:productData}))
+        res = await dispatch(updateProduct({id: id,  data:productData})).then(unwrapResult)
+        
         .then(response =>{
           handleCloseModal();
           setproductData({ ...productData })
@@ -79,6 +80,7 @@ const ModalProduct = (props) => {
           });
           setValidInput({ ...validInput })
         })
+        console.log(res);
       }
   }
   const handleCloseModal = () => {
@@ -115,7 +117,8 @@ const ModalProduct = (props) => {
                 value={productData.type || ''}
                 onChange={handleInputChange}
               >
-                <option defaultValue="LOGITECH">LOGITECH</option>
+                <option>vui lòng chọn type</option>
+                <option value="LOGITECH">LOGITECH</option>
                 <option value="ASUS">ASUS</option>
                 <option value="AKKO">AKKO</option>
 

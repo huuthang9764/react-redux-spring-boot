@@ -1,12 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import ProductService from "../../service/product.service";
 
-
-
-
 const initialState = {
   products: [],
-  filteredProducts:[],
+  filteredProducts: [],
   isLoading: false,
   errorMessage: '',
 }
@@ -41,16 +38,24 @@ export const deleteProduct = createAsyncThunk(
 );
 export const searchProducts = createAsyncThunk(
   "product/searchProducts",
-  async ({pageNumber,pageSize,searchTerm}) => {
-    const response = await ProductService.searchProducts(pageNumber,pageSize,searchTerm);
+  async ({ searchTerm, pageNumber, pageSize }) => {
+    const response = await ProductService.searchProducts(searchTerm, pageNumber, pageSize);
+    return response;
+  }
+);
+export const sortProducts = createAsyncThunk(
+  "product/sortProducts",
+  async ({ order, pageNumber, pageSize }) => {
+    const response = await ProductService.sortProductsByPrice(order, pageNumber, pageSize);
     return response;
   }
 );
 
-export const sortProducts = createAsyncThunk(
-  "product/sortProducts",
-  async ({pageNumber,pageSize,order}) => {
-    const response = await ProductService.sortProductsByPrice(pageNumber,pageSize,order);
+
+export const sortProductsById = createAsyncThunk(
+  "product/sortProductId",
+  async ({ order, pageNumber, pageSize }) => {
+    const response = await ProductService.sortProductsById(order, pageNumber, pageSize);
     return response;
   }
 );
@@ -81,9 +86,8 @@ const productSlice = createSlice({
       .addCase(createProduct.pending, (state) => {
         state.status = 'loading';
       })
-      .addCase(createProduct.fulfilled, (state, action) => {
+      .addCase(createProduct.fulfilled, (state) => {
         state.status = 'succeeded';
-        state.products = action.payload;
       })
       .addCase(createProduct.rejected, (state, action) => {
         state.status = 'failed';
@@ -92,14 +96,8 @@ const productSlice = createSlice({
       .addCase(updateProduct.pending, (state) => {
         state.status = 'loading';
       })
-      .addCase(updateProduct.fulfilled, (state, action) => {
+      .addCase(updateProduct.fulfilled, (state) => {
         state.status = 'succeeded';
-        const index = state.products.findIndex((product) => product.id === action.payload.id);
-        state[index] = {
-          ...state[index],
-          ...action.payload,
-        };
-        
       })
       .addCase(updateProduct.rejected, (state, action) => {
         state.status = 'failed';
@@ -108,11 +106,8 @@ const productSlice = createSlice({
       .addCase(deleteProduct.pending, (state) => {
         state.status = 'loading';
       })
-      .addCase(deleteProduct.fulfilled, (state, action) => {
+      .addCase(deleteProduct.fulfilled, (state) => {
         state.status = 'succeeded';
-        // Xóa sản phẩm khỏi state.products sau khi xóa thành công
-        const deletedProductId = action.payload;
-        state.products = state.products.filter((product) => product.id !== deletedProductId);
       })
       .addCase(deleteProduct.rejected, (state, action) => {
         state.status = 'failed';
@@ -123,7 +118,7 @@ const productSlice = createSlice({
       })
       .addCase(searchProducts.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.products  = action.payload;
+        state.products = action.payload;
       })
       .addCase(searchProducts.rejected, (state, action) => {
         state.status = 'failed';
@@ -139,8 +134,19 @@ const productSlice = createSlice({
       .addCase(sortProducts.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
+      })
+      .addCase(sortProductsById.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(sortProductsById.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.products = action.payload;
+      })
+      .addCase(sortProductsById.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
       });
-          
+
   },
 });
 

@@ -1,29 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Dropdown } from 'react-bootstrap';
-import ReactPaginate from 'react-paginate'
-import { deleteProduct, fetchProducts, searchProducts, sortProducts } from '../../redux/slices/product';
+import { deleteProduct, fetchProducts, searchProducts, sortProducts, sortProductsById, sortProductsByType } from '../../redux/slices/product';
 import ModalProduct from './ModalProduct';
 import Swal from 'sweetalert2';
+import thumbnail from '../../assets/img/akko.jpg'
+import './Product.scss'
+import ReactPaginate from 'react-paginate';
+import { Dropdown } from 'react-bootstrap';
 
 const Product = () => {
     const dispatch = useDispatch();
     const products = useSelector((state) => state.product.products.content);
     const status = useSelector((state) => state.product.status);
     const error = useSelector((state) => state.product.error);
-    const totalPage =useSelector((state) => state.product.products.totalPages);
-    
+    const totalPage = useSelector((state) => state.product.products.totalPages);
+
+
     const [isShow, setIsShow] = useState(false);
     const [actionModalProduct, setActionModalProduct] = useState("");
     const [dataModalProduct, setDataModalProduct] = useState({});
 
-    const [searchTerm, setSearchTerm] = useState('');
+    const [searchTerm, setSearchTerm] = useState("");
     const [pageNumber, setPageNumber] = useState(1);
     const [pageSize, setPageSize] = useState(5);
 
+
     useEffect(() => {
-        dispatch(fetchProducts({ pageNumber, pageSize }));
-      }, [dispatch, pageNumber, pageSize]);
+        dispatch(searchProducts({searchTerm, pageNumber, pageSize }));
+    }, [dispatch, searchTerm,pageNumber, pageSize]);
 
     const handleSearchChange = (event) => {
         setSearchTerm(event.target.value);
@@ -31,13 +35,16 @@ const Product = () => {
 
     const handleSearchSubmit = (event) => {
         event.preventDefault();
-        dispatch(searchProducts({pageNumber,pageSize,searchTerm}));
+        setPageNumber(1)
+        dispatch(searchProducts({ searchTerm, pageNumber:1, pageSize }));
+
     };
 
-    const handleSortOrder = async (order) => {
-        await dispatch(sortProducts({pageNumber,pageSize,order}));
-    };
 
+    const handleSortOrder = (order) => {
+        setPageNumber(1)
+        dispatch(sortProducts({ order, pageNumber: 1, pageSize }));
+    };
     const handleAddProduct = () => {
         setActionModalProduct("CREATE");
         setIsShow(true);
@@ -54,22 +61,24 @@ const Product = () => {
             showCancelButton: true,
             confirmButtonColor: "#3085d6",
             cancelButtonColor: "#d33",
-            confirmButtonText: "Yes, delete it!"
+            confirmButtonText: "Đúng, xóa nó đi!",
+            cancelButtonText: "Khoan"
         }).then((result) => {
             if (result.isConfirmed) {
                 dispatch(deleteProduct(product.id))
                     .then(response => {
                         Swal.fire({
                             title: 'Deleted!',
-                            text: "Keyboard deleted successfully",
+                            text: "Đã xóa bàn phím thành công",
                             icon: 'success'
                         });
-                        dispatch(fetchProducts({ pageNumber, pageSize }));
+                        setPageNumber(1)
+                        dispatch(searchProducts({searchTerm, pageNumber:1, pageSize }));
                     })
                     .catch(error => {
                         Swal.fire({
                             title: 'Error!',
-                            text: 'Failed to delete .',
+                            text: 'Không thể xóa .',
                             icon: 'error'
                         });
                     });
@@ -77,18 +86,18 @@ const Product = () => {
         })
     }
     const handleClose = async () => {
-        await dispatch(fetchProducts());
+        setPageNumber(1)
+        dispatch(searchProducts({ searchTerm, pageNumber:1, pageSize }));
         setIsShow(false);
     }
     const handlePageClick = async (e) => {
         setPageNumber(+e.selected + 1);
-
     }
 
     return (
         <>
             <div className='container mt-3'>
-                <div className='row'>
+                <div className='row justify-content-center'>
                     <div className='col-12 col-sm-12 d-sm-flex align-items-center mb-3'>
                         <div className='col-12 col-sm-3 mr-auto'>
                             <h2>List Products</h2>
@@ -119,31 +128,41 @@ const Product = () => {
                                 <h5>Sắp xếp theo</h5>
                             </div>
                             <div className='col-12 col-sm-12 d-sm-flex'>
-                            <button
-                                className='btn btn-outline-primary me-3'
-                                onClick={() => { handleSortOrder("desc") }}
-                            >Giá Cao - Thấp</button>
-                            <button
-                                className='btn btn-outline-primary me-3'
-                                onClick={() => { handleSortOrder("asc") }}
-                            >Giá Thấp - Cao</button>
-                            <button
-                                className='btn btn-outline-danger me-3'
-                                onClick={() => { dispatch(sortProducts({pageNumber,pageSize,searchTerm})); }}
-                            >Mới nhất</button>
-                            <Dropdown  className='col-12 col-sm-3'>
-                            <Dropdown.Toggle variant="success" id="dropdown-basic">
-                                Số lượng sản phẩm: {pageSize}
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu>
-                                <Dropdown.Item onClick={() => setPageSize(+5)}>5</Dropdown.Item>
-                                <Dropdown.Item onClick={() => setPageSize(+10)}>10</Dropdown.Item>
-                                <Dropdown.Item onClick={() => setPageSize(+20)}>20</Dropdown.Item>
-                            </Dropdown.Menu>
-                        </Dropdown>
+                                <button
+                                    className='btn btn-outline-primary me-3'
+                                    onClick={() => { handleSortOrder("desc") }}
+                                >Giá Cao - Thấp</button>
+                                <button
+                                    className='btn btn-outline-primary me-3'
+                                    onClick={() => { handleSortOrder("asc") }}
+                                >Giá Thấp - Cao</button>
+                                <button
+                                    className='btn btn-outline-danger me-3'
+                                    onClick={() => { dispatch(sortProductsById({ searchTerm:"desc", pageNumber:1, pageSize })); }}
+                                >Mới nhất</button>
+                                <Dropdown className='col-12 col-sm-3'>
+                                    <Dropdown.Toggle variant="success" id="dropdown-basic">
+                                        Tìm theo hãng: 
+                                    </Dropdown.Toggle>
+                                    <Dropdown.Menu>
+                                        <Dropdown.Item onClick={() => setSearchTerm('AKKO')}>AKKO</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => setSearchTerm('ASUS')}>ASUS</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => setSearchTerm('LOGITECH')}>LOGITECH</Dropdown.Item>
+                                    </Dropdown.Menu>
+                                </Dropdown>
+                                <Dropdown className='col-12 col-sm-3'>
+                                    <Dropdown.Toggle variant="success" id="dropdown-basic">
+                                        Số lượng sản phẩm: {pageSize}
+                                    </Dropdown.Toggle>
+                                    <Dropdown.Menu>
+                                        <Dropdown.Item onClick={() => setPageSize(+5)}>5</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => setPageSize(+10)}>10</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => setPageSize(+20)}>20</Dropdown.Item>
+                                    </Dropdown.Menu>
+                                </Dropdown>
                             </div>
                         </div>
-                        
+
                     </div>
                     {status === 'loading' ? (
                         <div>Loading...</div>
@@ -151,72 +170,75 @@ const Product = () => {
                         <div>Error: {error}</div>
                     ) : (
                         <>
-                        <table className='table table-striped table-bordered table-hover table-sm' >
-                            <thead>
-                                <tr>
-                                    <th className='table-action'>#</th>
-                                    <th>Name</th>
-                                    <th>Type</th>
-                                    <th>Price($)</th>
-                                    <th>CreateDate</th>
-                                    <th className='table-action'>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {Array.isArray(products) && products.length > 0 ?
-                                    <>
-                                        {products?.map((item, i) => (
-                                            <tr key={item.id}>
-                                                <td className='table-action'>{item.id}</td>
-                                                <td>{item.name}</td>
-                                                <td>{item.type}</td>
-                                                <td>{item.price}</td>
-                                                <td>{item.createDate}</td>
-                                                <td className='table-action'>
-                                                    <i className='bi bi-pencil-square m-2'
-                                                        onClick={() => handleEditProduct(item)}
-                                                    ></i>
-                                                    <i className="bi bi-trash3 m-2"
-                                                        onClick={() => handleDeleteProduct(item)}
-                                                    ></i>
-                                                </td>
+                            <table className='table table-striped table-bordered table-hover table-sm align-middle text-center' >
+                                <thead>
+                                    <tr>
+                                        <th >#</th>
+                                        <th>Thumbnail</th>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Price($)</th>
+                                        <th>CreateDate</th>
+                                        <th >Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {Array.isArray(products) && products.length > 0 ?
+                                        <>
+                                            {products?.map((item, i) => (
+                                                <tr key={item.id}>
+                                                    <td >{(pageNumber - 1)*pageSize + i + 1} </td>
+                                                    <td className='thumbnail-product'>
+                                                        <img src={thumbnail} alt="thumbnail" />
+                                                    </td>
+                                                    <td>{item.name}</td>
+                                                    <td>{item.type}</td>
+                                                    <td>{item.price}</td>
+                                                    <td>{item.createDate}</td>
+                                                    <td className="align-middle">
+                                                        <i className='bi bi-pencil-square m-2'
+                                                            onClick={() => handleEditProduct(item)}
+                                                        ></i>
+                                                        <i className="bi bi-trash3 m-2"
+                                                            onClick={() => handleDeleteProduct(item)}
+                                                        ></i>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </> :
+                                        <>
+                                            <tr>
+                                                <th>Not Found Product</th>
                                             </tr>
-                                        ))}
-                                    </> :
-                                    <>
-                                        <tr>
-                                            <th>Not Found Product</th>
-                                        </tr>
-                                    </>
-                                }
-                            </tbody>
-                        </table>
+                                        </>
+                                    }
+                                </tbody>
+                            </table>
                         </>
                     )}
                     {totalPage > 0 &&
-                    <ReactPaginate
-                        nextLabel="next >"
-                        onPageChange={handlePageClick}
-                        pageRangeDisplayed={2}
-                        marginPagesDisplayed={2}
-                        pageCount={totalPage}
-                        previousLabel="< previous"
-                        pageClassName="page-item"
-                        pageLinkClassName="page-link"
-                        previousClassName="page-item"
-                        previousLinkClassName="page-link"
-                        nextClassName="page-item"
-                        nextLinkClassName="page-link"
-                        breakLabel="..."
-                        breakClassName="page-item"
-                        breakLinkClassName="page-link"
-                        containerClassName="pagination"
-                        activeClassName="active"
-                        renderOnZeroPageCount={null}
-                    />
-                }
-                    
-                    
+                        <ReactPaginate
+                            nextLabel="next >"
+                            onPageChange={handlePageClick}
+                            pageRangeDisplayed={2}
+                            marginPagesDisplayed={2}
+                            pageCount={totalPage}
+                            forcePage={pageNumber - 1}
+                            previousLabel="< previous"
+                            pageClassName="page-item"
+                            pageLinkClassName="page-link"
+                            previousClassName="page-item"
+                            previousLinkClassName="page-link"
+                            nextClassName="page-item"
+                            nextLinkClassName="page-link"
+                            breakLabel="..."
+                            breakClassName="page-item"
+                            breakLinkClassName="page-link"
+                            containerClassName="pagination"
+                            activeClassName="active"
+                            renderOnZeroPageCount={null}
+                        />
+                    }
                 </div>
             </div>
             <ModalProduct

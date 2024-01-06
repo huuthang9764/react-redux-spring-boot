@@ -3,84 +3,112 @@ import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import Swal from 'sweetalert2'
 import userService from '../../service/user.service';
+import { useDispatch } from 'react-redux';
+import { createUsers, updateUsers } from '../../redux/slices/user';
+import { unwrapResult } from '@reduxjs/toolkit';
 
 const ModalUser = (props) => {
+    const dispatch = useDispatch();
     const { action, dataModalUser } = props;
     const userState = {
+        firstname: "",
+        lastname: "",
         username: "",
-        fullname: "",
-        email: "",
         password: "",
-        isActive: "",
+        role: "",
         id: null
     }
     const validInputDefault = {
+        firstname: true,
+        lastname: true,
         username: true,
-        fullname: true,
-        email: true,
         password: true,
-        isActive: true,
     }
     const [userData, setUserData] = useState(userState);
     const [validInput, setValidInput] = useState(validInputDefault);
 
 
-    useEffect(()=>{
-        if(action ==="UPDATE"){
-            setUserData({...dataModalUser});
+    useEffect(() => {
+        if (action === "UPDATE") {
+            setUserData({ ...dataModalUser });
         }
-    },[dataModalUser,action]);
+    }, [dataModalUser, action]);
     const handleInputChange = e => {
         const { name, value } = e.target;
         setUserData({ ...userData, [name]: value });
         setValidInput(prevValidInput => ({
             ...prevValidInput,
-            [name]: value.trim() !== '' 
+            [name]: value.trim() !== ''
         }));
     }
-    const checkValidateInput = () => {
-        setValidInput(validInputDefault);
-        const fieldsToCheck = ['username', 'fullname', 'email', 'password', 'isActive'];
-        let check = true;
 
-        for (const fieldName in userData) {
-            if (Object.hasOwnProperty.call(userData, fieldName)) {
-                if (fieldsToCheck.includes(fieldName) && userData[fieldName].trim() === '') {
-                    setValidInput(prevValidInput => ({
-                        ...prevValidInput,
-                        [fieldName]: false
-                    }));
-                    check = false;
-                }
-            }
-        }
-        return check; // Trả về giá trị cuối cùng của check
-    };
-    const confirmAddUser = async(e) => {
+    const confirmAddUser = async (e) => {
         e.preventDefault();
-        let check = checkValidateInput();
-        if(check === true){
-            let res = action === "CREATE" ?
-            await userService.createUser(userData)
-            : await userService.updateUser(userData);
-            if(res && res.status ===201){
-                props.onHide();
-                setUserData({...userState})
-                Swal.fire({
-                    title: 'Success!',
-                    text: res.data.EM,
-                    icon: 'success'
-                 });
-            }
-            if(res && res.status !==201){
-                Swal.fire({
-                    title: 'Error!',
-                    text: res.data.EM,
-                    icon: 'error'
-                 });
-                 setValidInput({...validInput})
-            }
+        const { id } = userData;
+
+        let res
+        if (action === "CREATE") {
+            res = await dispatch(createUsers(userData)).then(unwrapResult)
+                .then(response => {
+                    handleCloseModal();
+                    setUserData(userData)
+                    Swal.fire({
+                        title: 'Success!',
+                        text: "Create Success",
+                        icon: 'success'
+                    });
+                })
+                .catch(error => {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: "Create Error",
+                        icon: 'error'
+                    });
+                    setValidInput({ ...validInput })
+                });
+        } else {
+            res = await dispatch(updateUsers({ id: id, data: userData })).then(unwrapResult)
+
+                .then(response => {
+                    handleCloseModal();
+                    setUserData({ ...userData })
+                    Swal.fire({
+                        title: 'Success!',
+                        text: response.payload,
+                        icon: 'success'
+                    });
+                }).catch(error => {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: "Update Error",
+                        icon: 'error'
+                    });
+                    setValidInput({ ...validInput })
+                })
+
         }
+        // if(check === true){
+        //     let res = action === "CREATE" ?
+        //     await userService.createUser(userData)
+        //     : await userService.updateUser(userData);
+        //     if(res && res.status ===201){
+        //         props.onHide();
+        //         setUserData({...userState})
+        //         Swal.fire({
+        //             title: 'Success!',
+        //             text: res.data.EM,
+        //             icon: 'success'
+        //          });
+        //     }
+        //     if(res && res.status !==201){
+        //         Swal.fire({
+        //             title: 'Error!',
+        //             text: res.data.EM,
+        //             icon: 'error'
+        //          });
+        //          setValidInput({...validInput})
+        //     }
+        // }
     }
     const handleCloseModal = () => {
         props.onHide();
@@ -102,8 +130,27 @@ const ModalUser = (props) => {
                     <form  >
                         <div className='content-body row'>
                             <div className='col-12 col-sm-6 form-group'>
-                                <label>User Name :</label>
+                                <label>firstname :</label>
                                 <input type="text"
+                                    className={validInput.firstname ? 'form-control' : 'form-control is-invalid'}
+                                    name="firstname"
+                                    value={userData.firstname || ''}
+                                    onChange={handleInputChange}
+                                />
+                            </div>
+                            <div className='col-12 col-sm-6 form-group'>
+                                <label>lastname :</label>
+                                <input type="text"
+                                    className={validInput.lastname ? 'form-control' : 'form-control is-invalid'}
+                                    name="lastname"
+                                    value={userData.lastname || ''}
+                                    onChange={handleInputChange}
+                                />
+                            </div>
+                            <div className='col-12 col-sm-6 form-group'>
+                                <label>username(<span className='red'>*</span>):</label>
+                                <input disabled={action === "CREATE" ? false : true}
+                                    type="text"
                                     className={validInput.username ? 'form-control' : 'form-control is-invalid'}
                                     name="username"
                                     value={userData.username || ''}
@@ -111,23 +158,17 @@ const ModalUser = (props) => {
                                 />
                             </div>
                             <div className='col-12 col-sm-6 form-group'>
-                                <label>fullname :</label>
-                                <input type="text"
-                                    className={validInput.fullname ? 'form-control' : 'form-control is-invalid'}
-                                    name="fullname"
-                                    value={userData.fullname || ''}
+                                <label>role:</label>
+                                <select
+                                    className='form-select'
+                                    name="role"
+                                    value={userData.role || ''}
                                     onChange={handleInputChange}
-                                />
-                            </div>
-                            <div className='col-12 col-sm-6 form-group'>
-                                <label>Email(<span className='red'>*</span>):</label>
-                                <input disabled={action === "CREATE" ? false : true}
-                                    type="email"
-                                    className={validInput.email ? 'form-control' : 'form-control is-invalid'}
-                                    name="email"
-                                    value={userData.email || ''}
-                                    onChange={handleInputChange}
-                                />
+                                >
+                                    <option defaultValue="USER">USER</option>
+                                    <option value="ADMIN">ADMIN</option>
+
+                                </select>
                             </div>
                             {
                                 action === "CREATE"
@@ -142,20 +183,6 @@ const ModalUser = (props) => {
                                     />
                                 </div>
                             }
-
-                            <div className='col-12 col-sm-6 form-group'>
-                                <label>isActive:</label>
-                                <select
-                                    className={validInput.isActive ? 'form-select' : 'form-control is-invalid'}
-                                    name="isActive"
-                                    value={userData.isActive || ''}
-                                    onChange={handleInputChange}
-                                >
-                                    <option defaultValue="Published">Published</option>
-                                    <option value="Pending">Pending</option>
-
-                                </select>
-                            </div>
                         </div>
                     </form>
                 </Modal.Body>

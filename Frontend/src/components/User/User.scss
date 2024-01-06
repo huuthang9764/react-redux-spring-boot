@@ -2,11 +2,15 @@
     
     table{
         .table-action{
-            text-align: center;
             i{
                 cursor: pointer;
             }
         }
+    }
+    .thumbnail-accImg{
+        img{
+            width: 50px;
+           }
     }
     
 }

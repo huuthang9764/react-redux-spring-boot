@@ -35,18 +35,15 @@ const authSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(login.pending, (state) => {
-        // Bật trạng thái loading
         state.isLoading = true;
       })
       .addCase(login.fulfilled, (state, action) => {
-        // Tắt trạng thái loading, lưu thông tin user vào store
         state.isLoading = false;
         state.isLoggedIn = true;
         localStorage.setItem('isLoggedIn', 'true');
         state.currentUser = action.payload;
       })
       .addCase(login.rejected, (state, action) => {
-        // Tắt trạng thái loading, lưu thông báo lỗi vào store
         state.isLoading = false;
         // state.errorMessage = action.payload.message;
       })

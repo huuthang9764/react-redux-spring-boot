@@ -4,7 +4,7 @@ import api from "./axiosClient";
 const fetchProducts = async (pageNumber, pageSize) => {
   try {
     const token = getToken();
-    const response = await api.get(`/keyboard?pageNumber=${pageNumber}&size=${pageSize}&sort=id,desc`, {
+    const response = await api.get(`/keyboard?sort=id,asc&pageNumber=${pageNumber}&size=${pageSize}`, {
       headers: {
         Authorization: `Basic ${token}`,
       },
@@ -58,10 +58,10 @@ const deleteProduct = async (productId) => {
   }
 };
 
-const searchProducts = async (pageNumber,pageSize,searchTerm) => {
+const searchProducts = async (searchTerm, pageNumber, pageSize) => {
   try {
     const token = getToken();
-    const response = await api.get(`/keyboard?pageNumber=${pageNumber}&size=${pageSize}&sort=id,desc&search=${searchTerm}`, {
+    const response = await api.get(`/keyboard?sort=id,desc&search=${searchTerm}&pageNumber=${pageNumber}&size=${pageSize}`, {
       headers: {
         Authorization: `Basic ${token}`,
       },
@@ -72,11 +72,46 @@ const searchProducts = async (pageNumber,pageSize,searchTerm) => {
   }
 };
 
-const sortProductsByPrice = async (pageNumber,pageSize,order) => {
+const sortProductsByPrice = async (order, pageNumber, pageSize) => {
   try {
     const token = getToken();
     const sortOption = order === 'asc' ? 'price,asc' : 'price,desc';
-    const response = await api.get(`/keyboard?pageNumber=${pageNumber}&size=${pageSize}&sort=${sortOption}`, {
+    const response = await api.get(`/keyboard?sort=${sortOption}&pageNumber=${pageNumber}&size=${pageSize}`, {
+      headers: {
+        Authorization: `Basic ${token}`,
+      },
+    });
+    return response.data; 
+  } catch (error) {
+    throw new Error('Failed to sort products by id');
+  }
+};
+const sortProductsByType = async (order, pageNumber, pageSize) => {
+  try {
+    const token = getToken();
+    const sortOption ='';
+    if (order === 'AKKO') {
+      sortOption = 'AKKO'; 
+    } else if (order === 'ASUS') {
+      sortOption = 'ASUS'; 
+    } else if (order === 'LOGITECH') {
+      sortOption = 'LOGITECH'; 
+    }
+    const response = await api.get(`/keyboard?search=${sortOption}&pageNumber=${pageNumber}&size=${pageSize}`, {
+      headers: {
+        Authorization: `Basic ${token}`,
+      },
+    });
+    return response.data; 
+  } catch (error) {
+    throw new Error('Failed to sort products by id');
+  }
+};
+const sortProductsById = async (order, pageNumber, pageSize) => {
+  try {
+    const token = getToken();
+    const sortOption = order === 'asc' ? 'id,asc' : 'id,desc';
+    const response = await api.get(`/keyboard?sort=${sortOption}&pageNumber=${pageNumber}&size=${pageSize}`, {
       headers: {
         Authorization: `Basic ${token}`,
       },
@@ -88,13 +123,14 @@ const sortProductsByPrice = async (pageNumber,pageSize,order) => {
 };
 
 
-
 const ProductService = {
   fetchProducts,
   createProduct,
   updateProduct,
   deleteProduct,
   searchProducts,
-  sortProductsByPrice
+  sortProductsByPrice,
+  sortProductsById,
+  sortProductsByType
 }
 export default ProductService;

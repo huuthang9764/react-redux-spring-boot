@@ -8,8 +8,6 @@ import com.example.FinalExam.Service.Keyboard.IKeyboardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,33 +30,21 @@ public class KeyboardController {
         return service.getAllKeyboard(pageable, search, form);
 
     }
-@PostMapping()
-public ResponseEntity<String> createKeyboard(@RequestBody @Valid KeyboardCreateForm form) {
-    try {
+
+    @PostMapping()
+    public void createKeyboard(@RequestBody @Valid KeyboardCreateForm form){
         service.createKeyboard(form);
-        return ResponseEntity.ok("Keyboard created successfully");
-    } catch (Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to create keyboard");
     }
-}
+
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateKeyboard(@PathVariable(name = "id") int id, @RequestBody @Valid KeyboardUpdateForm form) {
-        try {
-            form.setId(id);
-            service.updateKeyboard(form);
-            return ResponseEntity.ok("Keyboard updated successfully");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to update keyboard");
-        }
+    public void updateKeyboard(@PathVariable (name = "id") int id
+            , @RequestBody @Valid KeyboardUpdateForm form){
+        form.setId(id);
+        service.updateKeyboard(form);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteKeyboard(@PathVariable(name = "id") int id) {
-        try {
-            service.deleteKeyboard(id);
-            return ResponseEntity.ok("Keyboard deleted successfully");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to delete keyboard");
-        }
+    public void deleteKeyboard(@PathVariable (name = "id") int id){
+        service.deleteKeyboard(id);
     }
 }

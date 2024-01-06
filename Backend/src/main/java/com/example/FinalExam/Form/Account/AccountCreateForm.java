@@ -18,7 +18,6 @@ public class AccountCreateForm {
     @NotBlank (message = "Bạn không được để trống họ người dùng !!")
     private String lastname;
 
-    @UniqueElements
     @NotBlank (message = "Bạn không được để trống tên đăng nhập !!")
     private String username;
 
